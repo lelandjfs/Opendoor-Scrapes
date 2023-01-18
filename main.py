@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime
-import xlwings as xw
+from openpyxl import Workbook, load_workbook
 
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'}
@@ -58,31 +58,22 @@ print('Done.')
 
 # BREAK - load file into master
 
-master_wb = xw.Book(r'C:\Users\lelan\OneDrive\Documents\Python\Web Data Scraper\OpenDoor\Sacramento\Master\OpenDoorMaster.xlsx')
+source_file = load_workbook(r'C:\Users\lelan\OneDrive\Documents\Python\Web Data Scraper\OpenDoor\Sacramento\Archive\opendoorresults_' + current_date + '.xlsx')
+dest_file = load_workbook(r'C:\Users\lelan\OneDrive\Documents\Python\Web Data Scraper\OpenDoor\Sacramento\Master\OpenDoorMaster.xlsx')
 
-master_sheets = master_wb.sheets
-master_sheets[0].range('A1').end('down').row
+source_sheet = source_file.active
+dest_sheet = dest_file.active
 
-current_date = datetime.now().strftime("%Y-%m-%d")
+max_row = source_sheet.max_row
+last_row = dest_sheet.max_row
 
-newdata_wb = xw.Book(r'C:\\Users\\lelan\\OneDrive\\Documents\\Python\\Web Data Scraper\\OpenDoor\\Sacramento\\Archive\\opendoorresults_' + current_date + '.xlsx')
-
-newdata_wb.sheets[0].range('A2').expand()
-
-master_wb.sheets[0].range('A1').end('down')
-
-master_wb.sheets[0].range('A1').end('down').address
-
-master_wb.sheets[0].range('A1').end('down').row
-
-new_data_raw = newdata_wb.sheets[0].range('A2').expand().value
+for i in range(2, max_row + 1): # start loop from second row
+    for j in range(1, source_sheet.max_column + 1):
+        dest_sheet.cell(row=last_row + i - 1, column=j).value = source_sheet.cell(row=i, column=j).value
 
 
-for s in master_sheets:
-    newrow = master_wb.sheets[s.name].range('A1').end('down').row + 1
-    master_wb.sheets[s.name].range(newrow, 1).value = new_data_raw
+dest_file.save(r'C:\Users\lelan\OneDrive\Documents\Python\Web Data Scraper\OpenDoor\Sacramento\Master\OpenDoorMaster.xlsx')
+dest_file.close()
+source_file.close()
 
-master_wb.save()
-master_wb.close()
-newdata_wb.close()
 print ('Saved to master')
